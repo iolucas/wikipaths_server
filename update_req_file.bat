@@ -1,0 +1,1 @@
+activate wikipaths_server && pip freeze > requirements.txt

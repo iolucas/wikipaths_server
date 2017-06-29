@@ -1,0 +1,102 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+
+<html>
+
+    <head>      
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">  
+        <title>Wikipaths</title>
+        <style>
+
+            html, body {
+                margin: 0;
+                height: 100%;
+                font-family: 'Calibri'
+            }
+
+            header {
+                background-color: #006064;
+                color: #84ffff;
+                height: 80px;
+                line-height: 80px;
+            }
+
+            header a {
+                color: #84ffff;
+                text-decoration: none;       
+            }
+
+            .user-area {
+                background-color: #aaa;
+                height: 50px;
+                line-height: 50px;
+                padding: 5px;
+                text-align: center;
+            }
+
+            .user-area a {
+                color: #111;
+                font-size: 30px;
+            }
+
+            #logo {
+                font-size: 30px;
+                margin-left: 20px;
+            }
+
+            #user {
+                font-size: 20px;
+                margin-right: 20px;
+                float: right;
+            }
+
+            #user a {
+                color: inherit;
+            }
+
+            section {
+                font-size: 20px;
+                padding: 10px;
+            }
+
+            .subject-reference {
+                background-color: #ddd;
+                padding-left: 5px;
+                margin: 5px;
+            }
+
+            .float-left {
+                float: left;
+            }
+
+            .float-right {
+                float: right;
+            }
+
+        </style>
+    </head>
+
+    <body>
+
+        <header>
+            <span id="logo"><a href="{% url 'home_index' %}">Wikipaths</a></span>
+        </header>
+
+        {% block content-area %}
+        {% endblock %}
+
+        <script>
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+            ga('create', 'UA-85005057-1', 'auto');
+            ga('send', 'pageview');
+        </script>
+
+    </body>
+
+
+</html>
