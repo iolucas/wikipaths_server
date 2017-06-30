@@ -3,7 +3,7 @@ from collections import Counter, defaultdict
 import re
 
 
-def get_links_score(href):
+def get_links_score(href, normalize=False):
     """Get wiki article links score."""
     
     art = wikipedia.get_article_by_href(href)
@@ -23,4 +23,15 @@ def get_links_score(href):
             for link in links_text_dict[l_text]:
                 links_text_counter[link] += links_weight
 
-    return links_text_counter.most_common()
+    #Sort and get tuple
+    sorted_links_scores = links_text_counter.most_common()
+
+    if normalize:
+        #Get the higher score value and divide everything by it
+        #Normalizing by the higher score instead of sum everything to on
+        #Avoid diferent number of links per page to get higher scores than other pages
+        higher_score = sorted_links_scores[0][1]
+        sorted_links_scores = [(link, score/higher_score) for link, score in sorted_links_scores]
+
+
+    return sorted_links_scores

@@ -155,16 +155,27 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
 
+#By default Django will search static files inside a static folder inside each app folder
+#collectstatic will also look for static files inside these places
 
-#Static file directory inclusion
-#If we are in production env
-if PRODUCTION_ENV:
-    #Serve static files in the root static folder
-    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-else: #non production env
-    #Serve on correspondent static folders
-    STATICFILES_DIRS = [
-        os.path.join(BASE_DIR,'static'),
-    ]
+#We can set folders out of any app folder to also search for static files with the variable below
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'static'),
+# ]
 
+#Folder where collect static will gather all of the static files to serve
+#This need another server to serv it
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+#URL where files will be served. Not the actual place
 STATIC_URL = '/static/'
+
+# #Static file directory inclusion
+# #If we are in production env
+# if PRODUCTION_ENV and True:
+#     #Serve static files in the root static folder
+    
+# # else: #non production env
+# #     #Serve on correspondent static folders
+
+

@@ -13,7 +13,7 @@
 #echo "from django.contrib.auth.models import User; User.objects.create_superuser('user', 'email@email.com', 'pass')" | python manage.py shell
 
 #echo [$0] Collecting static files to the root folder...
-#python manage.py collectstatic
+#python manage.py collectstatic --no-input
 
 #echo [$0] Testing application...
 #python manage.py test

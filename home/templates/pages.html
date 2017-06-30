@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content-area %}
 <center>
@@ -10,8 +11,9 @@
     </form>
 
     <br>
+    <!--<link rel="stylesheet" type="text/css" href="{% static 'test.css' %}">-->
 
-    {% if links_scores %}
+    {% if links_scores and False %}
         {% for link, score in links_scores %}
             <div style="background-color:#ddd;padding:10px;margin-bottom:15px">
                 {{link}} {{score}}
@@ -21,6 +23,59 @@
         {% endfor %}
     {% endif %}
 
+    <style>
+.links line {
+    stroke: #999;
+    stroke-opacity: 0.6;
+}
+
+.nodes circle {
+    stroke: #fff;
+    stroke-width: 1.5px;
+}
+
+    </style>
+
+    <svg id="svg-container" width="1200" height="800"></svg>
+    <script src="{% static 'wikipaths_diagrams\force_diagram\d3.v4.min.js' %}"></script>
+    <script src="{% static 'wikipaths_diagrams\force_diagram\force_diagram.js' %}"></script>
+    <script>
+        var diagram = new ForceDiagram("svg-container");
+        
+        function getGraphDataFromEdges(rawEdges, linksScores) {
+            
+            nodesDict = {};
+            edges = [];
+
+            for(var i = 0; i < rawEdges.length; i++) {
+                var source = rawEdges[i][0];
+                var target = rawEdges[i][1];
+
+                if(!(source in nodesDict))
+                    nodesDict[source] = {id: source, group: 1, score: linksScores[source] }    
+
+                if(!(target in nodesDict))
+                    nodesDict[target] = {id: target, group: 2, score: linksScores[target] }
+
+                edges.push({"source": source, "target": target, "value": 1})  ;
+            }
+
+            nodes = []
+            for(key in nodesDict)
+                nodes.push(nodesDict[key])
+
+            return {nodes: nodes, links: edges}
+        }
+
+        var rawEdges = JSON.parse('{{ page_links|safe }}');
+
+        var linksScores = JSON.parse('{{links_score_dict_json|safe}}');
+
+        var graphData = getGraphDataFromEdges(rawEdges, linksScores);
+
+        diagram.load(graphData);
+
+    </script>
 
 </center>
 
