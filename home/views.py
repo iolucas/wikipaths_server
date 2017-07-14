@@ -33,6 +33,7 @@ def home_index(request):
             links_scores = Counter()
 
             return render(request, "pages.html", {
+                'page': request.GET['page'],
                 'links_scores': links_scores,
                 'page_links': json.dumps(links),
                 'links_score_dict_json': json.dumps(nodes_score)

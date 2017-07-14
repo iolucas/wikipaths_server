@@ -2,7 +2,7 @@
 
 function SearchBox(initialText) {
     var self = this;
-    
+
     var searchDiv = d3.select(document.body)
         .append("div")
         // .style("background-color", "black")
@@ -18,8 +18,9 @@ function SearchBox(initialText) {
         .append("tr")
         // .style("border", "2px solid #000")
         // .style("width", "100%")
-        .style("height", "40px");
+        .style("height", "50px");
         
+    var changeTimeoutToken = null;
 
     tableRow.append("td")
         .style("padding-left", "10px")
@@ -33,10 +34,21 @@ function SearchBox(initialText) {
         .attr("value", initialText)
         .attr("placeholder", "Search something...")
         .on("input", function() {
-            if(this.value.trim())
-                self.search(this.value.trim());
-            else 
+
+            clearTimeout(changeTimeoutToken);
+
+            var searchInputValue = this.value.trim();
+
+            if(searchInputValue) {
+                changeTimeoutToken = setTimeout(function() {
+                    // console.log(searchInputValue)
+                    self.search(searchInputValue);
+                }, 300);
+            } else {
                 self.clear();
+            }
+
+
         });
 
     //Append clear button
@@ -46,7 +58,7 @@ function SearchBox(initialText) {
         // .style("background-color", "#aaa")
         // .style("vertical-align", "center")
         .style("border-left", "1px solid #555")
-        .style("width", "40px")
+        .style("width", "50px")
         .style("text-align", "center")
         .style("font-size", "20px")
         .style("font-weight", "bold")
@@ -123,6 +135,9 @@ function SearchBox(initialText) {
         d3.select("#search-clear-but").style("visibility", "visible");
     }
 
+    if(initialText)
+        this.showClearBut();
+
     this.hideClearBut = function() {
         d3.select("#search-clear-but").style("visibility", "collapse");
     }
@@ -137,7 +152,7 @@ function SearchBox(initialText) {
             searchDiv.selectAll(".search-result")
                 .remove()
             
-            searchDiv.selectAll(".search-result")
+            var searchRes = searchDiv.selectAll(".search-result")
                 .data(data)
                 .enter()
                 .append("a")
@@ -146,12 +161,31 @@ function SearchBox(initialText) {
                 .style("color", "#333")
                 .attr("href", function(d) { return "?page=" + encodeURIComponent(d[0]); })
                 .append("div")
-                .style("height", "30px")
-                .style("padding", "10px")
-                .style("line-height", "30px")
+                // .style("height", "30px")
+                .style("padding", "5px 5px 5px 10px")
+                // .style("line-height", "30px")
                 .style("border-top", "1px solid #777")
-                .style("background-color", "#fff")
+                .style("background-color", "#fff");
+
+            searchRes.append("span")
+                // .style("margin", "0")
+                // .style("padding", "0")
+                // .style("line-height", 0)
+                .style("font-size", "15px")
+                .style("font-weight", "bold")
                 .text(function(d) { return d[0]; });
+
+            searchRes.append("br");
+
+            searchRes.append("span")
+                // .style("margin", "0")
+                // .style("padding", "0")
+                // .style("line-height", 0)
+                .text(function(d) { 
+                    if(d[1].length > 80)
+                        return d[1].substring(0, 80) + "...";
+                    return d[1]
+                })
         });
     }
 }

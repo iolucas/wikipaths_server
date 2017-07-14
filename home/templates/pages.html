@@ -42,7 +42,7 @@
                 /*top: 50px;*/
                 /*left: 5px;*/
                 position: relative;
-                z-index: 10000;
+                z-index: 1000;
             }
 
 
@@ -52,9 +52,9 @@
 
     <body>
 
-        <header>
+        <!--<header>
             <span id="logo"><a href="{% url 'home_index' %}">Wikipaths</a></span>
-        </header>
+        </header>-->
 
         <!--<div id="search-div">
             <form action="" method="get">
@@ -82,6 +82,10 @@
             {% endif %}
 
         </center>
+
+        <span style="position:absolute;bottom:10px;right:10px;color:rgba(0,0,0,0.5);z-index: 2000;font-size:14px;">
+            Wikipaths.org
+        </span>
 
         <style>
             .links line {
@@ -113,7 +117,7 @@
 
         <script>
 
-            var searchBox = new SearchBox();
+            var searchBox = new SearchBox('{{ page }}');
 
             window.onload = function() {
 
