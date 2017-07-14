@@ -1,89 +1,194 @@
-{% extends "base.html" %}
-{% load static %}
+{% load staticfiles %}
+<!DOCTYPE html>
 
-{% block content-area %}
-<center>
-    <h1>Search</h1>
+<html>
+    <head>      
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">  
+        <title>Wikipaths</title>
+        <style>
 
-    <form action="" method="get">
-        <input type="text" name="page" value="" placeholder="I.E. Javascript">
-        <input type="submit" value="Search" />
-    </form>
-
-    <br>
-    <!--<link rel="stylesheet" type="text/css" href="{% static 'test.css' %}">-->
-
-    {% if links_scores and False %}
-        {% for link, score in links_scores %}
-            <div style="background-color:#ddd;padding:10px;margin-bottom:15px">
-                {{link}} {{score}}
-            </div>
-        {% empty %}            
-            No results were found.
-        {% endfor %}
-    {% endif %}
-
-    <style>
-.links line {
-    stroke: #999;
-    stroke-opacity: 0.6;
-}
-
-.nodes circle {
-    stroke: #fff;
-    stroke-width: 1.5px;
-}
-
-    </style>
-
-    <svg id="svg-container" width="2000" height="2000"></svg>
-    <script src="{% static 'wikipaths_diagrams\force_diagram\d3.v4.min.js' %}"></script>
-    <script src="{% static 'wikipaths_diagrams\force_diagram\force_diagram.js' %}"></script>
-    <script>
-        var diagram = new ForceDiagram("svg-container");
-        
-        function getGraphDataFromEdges(rawEdges, linksScores) {
-            
-            nodesDict = {};
-            edges = [];
-
-            for(var i = 0; i < rawEdges.length; i++) {
-                var source = rawEdges[i][0];
-                var target = rawEdges[i][1];
-
-                if(!(source in nodesDict))
-                    nodesDict[source] = {id: source, group: 1, score: linksScores[source] }    
-
-                if(!(target in nodesDict))
-                    nodesDict[target] = {id: target, group: 2, score: linksScores[target] }
-
-                edges.push({"source": source, "target": target, "value": 1})  ;
+            html, body {
+                margin: 0;
+                height: 100%;
+                font-family: 'Calibri';
+                /*background-color: #ddd;*/
+                background-color: #f2efea;
             }
 
-            nodes = []
-            for(key in nodesDict)
-                nodes.push(nodesDict[key])
+            header {
+                /*background-color: #006064;*/
+                background-color: #403d58;
+                color: #84ffff;
+                height: 50px;
+                line-height: 50px;
+                z-index: 10000;
+                position: relative;
+            }
 
-            return {nodes: nodes, links: edges}
-        }
+            header a {
+                color: #84ffff;
+                text-decoration: none;       
+            }
 
-        var rawEdges = JSON.parse('{{ page_links|safe }}');
+            #logo {
+                font-size:24px;
+                margin-left: 20px;
+            }
 
-        var linksScores = JSON.parse('{{links_score_dict_json|safe}}');
-
-        var graphData = getGraphDataFromEdges(rawEdges, linksScores);
-
-        diagram.load(graphData);
-
-    </script>
-
-</center>
-
-   
-
-
-
+            #search-div {
+                background-color: #fff;
+                /*padding: 10px;*/
+                /*display: inline-block;*/
+                /*top: 50px;*/
+                /*left: 5px;*/
+                position: relative;
+                z-index: 10000;
+            }
 
 
 
-{% endblock %}
+        </style>
+    </head>
+
+    <body>
+
+        <header>
+            <span id="logo"><a href="{% url 'home_index' %}">Wikipaths</a></span>
+        </header>
+
+        <!--<div id="search-div">
+            <form action="" method="get">
+                <input type="text" name="page" value="" placeholder="I.E. Javascript">
+                <input type="submit" value="Search" />
+            </form>
+        </div>-->
+
+        <center>
+            <!--<h1>Search</h1>-->
+
+            <!--<br><br>
+            <button id="fitscreen-button">Fit Screen</button>-->
+
+            <!--<link rel="stylesheet" type="text/css" href="{% static 'test.css' %}">-->
+
+            {% if links_scores and False %}
+                {% for link, score in links_scores %}
+                    <div style="background-color:#ddd;padding:10px;margin-bottom:15px">
+                        {{link}} {{score}}
+                    </div>
+                {% empty %}            
+                    No results were found.
+                {% endfor %}
+            {% endif %}
+
+        </center>
+
+        <style>
+            .links line {
+                stroke: #999;
+                stroke-opacity: 1;
+            }
+
+            /*.nodes circle {
+                stroke: #fff;
+                stroke-width: 1.5px;
+            }*/
+
+            #fitscreen-button {
+                position: fixed;
+                top: 100;
+                left: 0;
+            }
+
+        </style>
+
+        <!--<svg id="svg-container" width="2000" height="2000"></svg>-->
+        <!--<script src="{% static 'wikipaths_diagrams\force_diagram\jquery-2.1.4.min.js' %}"></script>-->
+        <script src="{% static 'wikipaths_diagrams\force_diagram\d3.v4.min.js' %}"></script>
+        <script src="{% static 'wikipaths_diagrams\force_diagram\eventhandler.js' %}"></script>
+        <script src="{% static 'wikipaths_diagrams\force_diagram\force_diagram.js' %}"></script>
+        <script src="{% static 'wikipaths_diagrams\force_diagram\nvgtt-container.js' %}"></script>
+        <script src="{% static 'wikipaths_diagrams\blocks_diagram\blocks_diagram.js' %}"></script>
+        <script src="{% static 'search_box.js' %}"></script>
+
+        <script>
+
+            var searchBox = new SearchBox();
+
+            window.onload = function() {
+
+                var esvg = new ElasticSvg("svg-container", document.body);
+
+                esvg.on("dblclick", function() {
+                    esvg.fitScreen({top:110, bottom:10, left:10, right:10});
+                });
+
+                d3.select("#fitscreen-button")
+                    .on("click", function() {
+                        esvg.fitScreen({top:60, bottom:10, left:10, right:10});
+                    });
+
+
+                // var diagram = new ForceDiagram("svg-container");
+                var diagram = new BlockDiagram("svg-container");
+
+                // diagram.on("load.end", function() {
+                //     console.log("ae");
+                //     esvg.fitScreen({top:60, bottom:10, left:10, right:10});
+                // });
+                
+                var rawEdges = JSON.parse('{{ page_links|safe }}');
+
+                var linksScores = JSON.parse('{{links_score_dict_json|safe}}');
+
+                var graphData = getGraphDataFromEdges(rawEdges, linksScores);
+
+                diagram.load(graphData);
+
+                esvg.fitScreen({top:110, bottom:10, left:10, right:10});
+            }
+            
+            function getGraphDataFromEdges(rawEdges, linksScores) {
+                
+                nodesDict = {};
+                edges = [];
+
+                for(var i = 0; i < rawEdges.length; i++) {
+                    var source = rawEdges[i][0];
+                    var target = rawEdges[i][1];
+
+                    if(!(source in nodesDict))
+                        nodesDict[source] = {id: source, group: 1, score: linksScores[source] }    
+
+                    if(!(target in nodesDict))
+                        nodesDict[target] = {id: target, group: 2, score: linksScores[target] }
+
+                    edges.push({"source": source, "target": target, "value": 1})  ;
+                }
+
+                nodes = []
+                for(key in nodesDict)
+                    nodes.push(nodesDict[key])
+
+                return {nodes: nodes, links: edges}
+            }
+
+
+
+        </script>
+
+        <script>
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+            ga('create', 'UA-102033689-1', 'auto');
+            ga('send', 'pageview');
+
+        </script>
+
+    </body>
+
+
+</html>

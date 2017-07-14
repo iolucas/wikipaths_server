@@ -16,7 +16,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-if "BLUEMIX_REGION" in os.environ:
+if "WIKIPATHS_PRODUCTION" in os.environ:
     PRODUCTION_ENV = True
 else:
     PRODUCTION_ENV = False
@@ -31,14 +31,14 @@ SECRET_KEY = 'wuj9&#z1zi7@!om!@rlumu1#ok#g0wpuke+8^$f6h=$0hfs9ui'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 if PRODUCTION_ENV:
-    DEBUG = True
+    DEBUG = False
 else:
     DEBUG = True
 
 #Set allowed hosts for prod/dev enviraonemnt
 #If we are in production env
 if PRODUCTION_ENV:
-    ALLOWED_HOSTS = ["wikipaths.mybluemix.net", "wikipaths.org"]
+    ALLOWED_HOSTS = ["wikipaths.mybluemix.net", "wikipaths.org", "www.wikipaths.org"]
 else: #non production env
     ALLOWED_HOSTS = ["*"]
 
@@ -106,7 +106,7 @@ WSGI_APPLICATION = 'wikipaths_server.wsgi.application'
 # https://docs.djangoproject.com/en/1.10/ref/settings/#databases
 
 
-if PRODUCTION_ENV and False:
+if PRODUCTION_ENV:
     #Database credentials populate
     import dj_database_url
     DATABASES = {'default': dj_database_url.config()}

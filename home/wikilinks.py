@@ -1,4 +1,5 @@
 from wikipydia import wikipedia, wikidb
+from wikipydia.url import QuotedURL, UnquotedURL
 from collections import Counter, defaultdict
 import re
 
@@ -109,10 +110,10 @@ def get_or_create_article_by_url(url):
         return wiki_url.article, False
 
     #If the url does not point to anything, get page data
-    try:
-        art = wikipedia.get_article_by_href(url)
-    except:
-        return None, False
+    #try:
+    art = wikipedia.get_article_by_href(UnquotedURL(url))
+    #except:
+        #return None, False
 
     #Try to get the article with pageId, if not found, create it 
     try:
