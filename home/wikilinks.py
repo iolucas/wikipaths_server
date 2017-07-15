@@ -1,13 +1,58 @@
 from wikipydia import wikipedia, wikidb
 from wikipydia.url import QuotedURL, UnquotedURL
+import wikipydia.wikilinks as WL 
 from collections import Counter, defaultdict
 import re
+
+from wikipydia.exceptions import PageDoesNotExists
+
+import json
+
+from urllib.parse import unquote
 
 #from wikidb import WikiDb
 
 #wiki_db = wikidb.WikiDb()
 
-from .models import WikiArticle as WA, WikiUrl, ArticleLink
+from .models import WikiArticle as WA, WikiUrl, ArticleLink, JsonCache, JsonCacheUrl, JsonCacheData
+
+def unquote_and_remove_underlines(str):
+    return str
+    # return unquote(str).replace("_", " ").replace("'", "\\'")
+
+def get_links_score_cache(url):
+
+    urlObj = UnquotedURL(url)
+
+    # art = wikipedia.get_article_by_href(urlObj)
+    # links_scores = WL.get_article_links_score(art) #Already sorted
+    # round_links_scores = [(link, round(score, 2)) for link, score in links_scores]
+    # return json.dumps(dict(round_links_scores))
+
+    #Return the cache json if found
+    for cacheUrl in JsonCacheUrl.objects.filter(url=urlObj.quoted):
+        return cacheUrl.cache.json
+
+    #Download article if not found
+    try:
+        art = wikipedia.get_article_by_href(urlObj)
+    except PageDoesNotExists:
+        return None
+
+    #Get or create the json cache from this article
+    try:
+        cache = JsonCacheData.objects.get(pageid=art.page_id())
+    except JsonCacheData.DoesNotExist:
+        links_scores = WL.get_article_links_score(art) #Already sorted
+        #Normalize things
+        round_links_scores = [(unquote_and_remove_underlines(link), round(score, 2)) for link, score in links_scores]
+        links_scores_json = json.dumps(dict(round_links_scores[:100]))
+        cache = JsonCacheData.objects.create(pageid=art.page_id(), json=links_scores_json)
+
+    #Create cacheUrl for this cache
+    newCacheUrl = JsonCacheUrl.objects.create(url=urlObj.quoted, cache=cache)
+
+    return newCacheUrl.cache.json
 
 def normalize_counter(counter_dict, method="higher_count"):
     if method == "higher_count":
@@ -94,6 +139,7 @@ def get_artlink_title(art_link):
         return art_link.link.article.title
 
     return art_link.link.url
+
 
 
 def get_or_create_article_by_url(url):

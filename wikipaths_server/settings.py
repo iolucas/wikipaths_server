@@ -38,7 +38,7 @@ else:
 #Set allowed hosts for prod/dev enviraonemnt
 #If we are in production env
 if PRODUCTION_ENV:
-    ALLOWED_HOSTS = ["wikipaths.mybluemix.net", "wikipaths.org", "www.wikipaths.org"]
+    ALLOWED_HOSTS = ["wikipaths.mybluemix.net", "wikipaths.org", "www.wikipaths.org", "learnmaps.net", "www.learnmaps.net"]
 else: #non production env
     ALLOWED_HOSTS = ["*"]
 

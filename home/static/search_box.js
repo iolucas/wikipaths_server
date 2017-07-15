@@ -143,6 +143,12 @@ function SearchBox(initialText) {
     }
 
     this.search = function(searchStr) {
+        //Ensures late queries overlap the screen with the search box empty
+        if(d3.select("#search-input").node().value == "") {
+            self.clear();
+            return;
+        }
+
         var searchUrl = "/search?q=" + encodeURIComponent(searchStr);
         // var timestamp = new Date().getDate();
         self.showClearBut();

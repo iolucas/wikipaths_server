@@ -19,20 +19,32 @@ from collections import Counter
 from .models import JsonCache
 
 
+def display_scores_debug(request, url):
+    scores_json = wikilinks.get_links_score_cache(url)
+    if scores_json == None:
+        raise Http404
+
+    return HttpResponse(scores_json)
+
+
 def display_map(request, article):
-    try:
-        nodes_score_json = JsonCache.objects.get(url=article).json
+    # try:
+    #     nodes_score_json = JsonCache.objects.get(url=article).json
 
-    except JsonCache.DoesNotExist:
-        try:
-            links, nodes_score = wikilinks.get_article_nb_links_and_scores_norm(article, 1, 50)
-            nodes_score_json = json.dumps(nodes_score)
+    # except JsonCache.DoesNotExist:
+    #     try:
+    #         links, nodes_score = wikilinks.get_article_nb_links_and_scores_norm(article, 1, 50)
+    #         nodes_score_json = json.dumps(nodes_score)
 
-            newJsonCache = JsonCache(url=article, json=nodes_score_json)
-            newJsonCache.save()
+    #         newJsonCache = JsonCache(url=article, json=nodes_score_json)
+    #         newJsonCache.save()
 
-        except PageDoesNotExists:
-            raise Http404
+    #     except PageDoesNotExists:
+    #         raise Http404
+
+    nodes_score_json = wikilinks.get_links_score_cache(article)
+    if nodes_score_json == None:
+        raise Http404
 
     return render(request, "pages.html", {
         'page': article,

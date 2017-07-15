@@ -4,7 +4,7 @@
 <html>
     <head>      
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">  
-        <title>Wikipaths</title>
+        <title>learnmaps - Display knowledge as maps.</title>
         <style>
 
             html, body {
@@ -89,10 +89,9 @@
 
                 var diagram = new BlockDiagram("svg-container");
 
+                var randNodes = []; //The first element will be removed anyway
 
-                var randNodes = [{}, {id:0, score:20}]; //The first element will be removed anyway
-
-                for(var i=1; i<20; i++) {
+                for(var i=0; i<20; i++) {
                     var randScore = Math.floor((Math.random() * 20) + 1);
                     randNodes.push({
                         score:randScore,
@@ -111,32 +110,35 @@
                     .attr("y", function(){
                         return svgAreaBBox.height * -0.1
                     })
+                    .attr("x", function(){
+                        return svgAreaBBox.width * -0.07
+                    })
                     .attr("fill", "#d3efbd")
-                    .attr("stroke", "#817f75")
+                    .attr("stroke", "#615f55")
                     .attr("stroke-width", function(){
                         return svgAreaBBox.height*0.002
                     })
                     .attr("font-size", function() {
                         return svgAreaBBox.height * 0.1
                     })
-                    .text("Wikipaths");
+                    .text("learnmaps");
 
                 d3.select("#svg-container")
                     .append("text")
                     .style("visibility", "visible")
                     .attr("text-anchor", "middle")
                     .attr("y", function(){
-                        return svgAreaBBox.height * 0.05
+                        return svgAreaBBox.height * -0.04
                     })
                     .attr("fill", "#d3efbd")
-                    .attr("stroke", "#817f75")
-                    .attr("stroke-width", function(){
-                        return svgAreaBBox.height*0.0005
+                    .attr("stroke", "#615f55")
+                    .attr("stroke-width", function() {
+                        return svgAreaBBox.height*0.001
                     })
                     .attr("font-size", function() {
                         return svgAreaBBox.height * 0.05
                     })
-                    .text("Display knowledge like maps.");
+                    .text("Display knowledge as maps.");
 
                 window.onresize = function() {
                     esvg.fitScreen({top:70, bottom:10, left:10, right:10});
