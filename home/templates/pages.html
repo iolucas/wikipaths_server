@@ -90,7 +90,7 @@
         <!--<script src="{% static 'wikipaths_diagrams\force_diagram\jquery-2.1.4.min.js' %}"></script>-->
         <script src="{% static 'wikipaths_diagrams\force_diagram\d3.v4.min.js' %}"></script>
         <script src="{% static 'wikipaths_diagrams\force_diagram\eventhandler.js' %}"></script>
-        <script src="{% static 'wikipaths_diagrams\force_diagram\force_diagram.js' %}"></script>
+        <!--<script src="{% static 'wikipaths_diagrams\force_diagram\force_diagram.js' %}"></script>-->
         <script src="{% static 'wikipaths_diagrams\force_diagram\nvgtt-container.js' %}"></script>
         <script src="{% static 'wikipaths_diagrams\blocks_diagram\blocks_diagram.js' %}"></script>
         <script src="{% static 'search_box.js' %}"></script>
@@ -108,51 +108,21 @@
                 });
 
 
-                // var diagram = new ForceDiagram("svg-container");
                 var diagram = new BlockDiagram("svg-container");
-
-                // diagram.on("load.end", function() {
-                //     console.log("ae");
-                //     esvg.fitScreen({top:60, bottom:10, left:10, right:10});
-                // });
-                
-                var rawEdges = JSON.parse('{{ page_links|safe }}');
 
                 var linksScores = JSON.parse('{{links_score_dict_json|safe}}');
 
-                var graphData = getGraphDataFromEdges(rawEdges, linksScores);
+                var nodesScores = []
+                for(var node in linksScores) {
+                    nodesScores.push({
+                        id: node, score:linksScores[node] 
+                    })
+                }
 
-                diagram.load(graphData);
+                diagram.load({nodes: nodesScores});
 
                 esvg.fitScreen({top:70, bottom:10, left:10, right:10});
             }
-            
-            function getGraphDataFromEdges(rawEdges, linksScores) {
-                
-                nodesDict = {};
-                edges = [];
-
-                for(var i = 0; i < rawEdges.length; i++) {
-                    var source = rawEdges[i][0];
-                    var target = rawEdges[i][1];
-
-                    if(!(source in nodesDict))
-                        nodesDict[source] = {id: source, group: 1, score: linksScores[source] }    
-
-                    if(!(target in nodesDict))
-                        nodesDict[target] = {id: target, group: 2, score: linksScores[target] }
-
-                    edges.push({"source": source, "target": target, "value": 1})  ;
-                }
-
-                nodes = []
-                for(key in nodesDict)
-                    nodes.push(nodesDict[key])
-
-                return {nodes: nodes, links: edges}
-            }
-
-
 
         </script>
 

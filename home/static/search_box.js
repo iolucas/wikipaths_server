@@ -143,7 +143,7 @@ function SearchBox(initialText) {
     }
 
     this.search = function(searchStr) {
-        var searchUrl = "search?q=" + encodeURIComponent(searchStr);
+        var searchUrl = "/search?q=" + encodeURIComponent(searchStr);
         // var timestamp = new Date().getDate();
         self.showClearBut();
 
@@ -159,7 +159,7 @@ function SearchBox(initialText) {
                 .attr("class", "search-result")
                 .style("text-decoration", "none")
                 .style("color", "#333")
-                .attr("href", function(d) { return "?page=" + encodeURIComponent(d[0]); })
+                .attr("href", function(d) { return "/map/" + encodeURIComponent(d[0]); })
                 .append("div")
                 // .style("height", "30px")
                 .style("padding", "5px 5px 5px 10px")

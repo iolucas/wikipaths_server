@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 
 import json
 
@@ -15,33 +15,58 @@ from . import wikilinks
 
 from collections import Counter
 
+
+from .models import JsonCache
+
+
+def display_map(request, article):
+    try:
+        nodes_score_json = JsonCache.objects.get(url=article).json
+
+    except JsonCache.DoesNotExist:
+        try:
+            links, nodes_score = wikilinks.get_article_nb_links_and_scores_norm(article, 1, 50)
+            nodes_score_json = json.dumps(nodes_score)
+
+            newJsonCache = JsonCache(url=article, json=nodes_score_json)
+            newJsonCache.save()
+
+        except PageDoesNotExists:
+            raise Http404
+
+    return render(request, "pages.html", {
+        'page': article,
+        'links_score_dict_json': nodes_score_json
+    })
+
 def home_index(request):
 
-    if 'debug' in request.GET:
-        debug_url = request.GET['debug']
+    # if 'debug' in request.GET:
+    #     debug_url = request.GET['debug']
 
-        links, nodes_score = wikilinks.get_article_nb_links_and_scores_norm(debug_url)
+    #     links, nodes_score = wikilinks.get_article_nb_links_and_scores_norm(debug_url)
 
-        return HttpResponse(json.dumps(links)+ "\n\n\n" + json.dumps(nodes_score))
+    #     return HttpResponse(json.dumps(links)+ "\n\n\n" + json.dumps(nodes_score))
 
-    if 'page' in request.GET:
-        try:
+    # if 'page' in request.GET:
+    #     try:
 
-            links, nodes_score = wikilinks.get_article_nb_links_and_scores_norm(request.GET['page'], 1, 25)
+    #         links, nodes_score = wikilinks.get_article_nb_links_and_scores_norm(request.GET['page'], 1, 25)
 
-            #links_scores = wikilinks.get_links_score(request.GET['page'], True)
-            links_scores = Counter()
+    #         #links_scores = wikilinks.get_links_score(request.GET['page'], True)
+    #         links_scores = Counter()
 
-            return render(request, "pages.html", {
-                'page': request.GET['page'],
-                'links_scores': links_scores,
-                'page_links': json.dumps(links),
-                'links_score_dict_json': json.dumps(nodes_score)
-            })
-        except PageDoesNotExists:
-            return render(request, "pages.html", {
-                'links_scores': [("PAGE NOT FOUND", "")]
-            })
+    #         return render(request, "pages.html", {
+    #             'page': request.GET['page'],
+    #             'links_scores': links_scores,
+    #             'page_links': json.dumps(links),
+    #             'links_score_dict_json': json.dumps(nodes_score)
+    #         })
+    #     except PageDoesNotExists:
+    #         raise Http404
+    #         # return render(request, "pages.html", {
+    #         #     'links_scores': [("PAGE NOT FOUND", "")]
+    #         # })
 
     return render(request, "home3.html")
 
@@ -70,6 +95,9 @@ def search_article(request):
     jsonResult = httpRequests.get(wikipedia_api_url, timeout=60).json()
 
     #Zip results to a better format
-    zippedJson = json.dumps(list(zip(jsonResult[1], jsonResult[2], jsonResult[3])))
+    zippedJson = list(zip(jsonResult[1], jsonResult[2]))
 
-    return HttpResponse(zippedJson)
+    #Remove disambiguation pages
+    zippedJson = [d for d in zippedJson if "may refer to:" not in d[1]]
+
+    return HttpResponse(json.dumps(zippedJson))
