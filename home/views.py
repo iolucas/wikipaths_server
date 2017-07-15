@@ -43,7 +43,7 @@ def home_index(request):
                 'links_scores': [("PAGE NOT FOUND", "")]
             })
 
-    return render(request, "home.html")
+    return render(request, "home3.html")
 
 def search_article(request):
 

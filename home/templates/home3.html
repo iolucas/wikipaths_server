@@ -15,20 +15,6 @@
                 background-color: #f2efea;
             }
 
-            header {
-                /*background-color: #006064;*/
-                background-color: #403d58;
-                color: #84ffff;
-                height: 50px;
-                line-height: 50px;
-                z-index: 10000;
-                position: relative;
-            }
-
-            header a {
-                color: #84ffff;
-                text-decoration: none;       
-            }
 
             #logo {
                 font-size:24px;
@@ -42,7 +28,31 @@
                 /*top: 50px;*/
                 /*left: 5px;*/
                 position: relative;
-                z-index: 1000;
+                /*z-index: 1000;*/
+            }
+
+            #title {
+                text-align: center;
+                position: relative;
+                z-index: 100000000;
+                padding-top: 100px;
+                color: #d3efbd;
+            }
+
+            #title h1 {
+                font-size: 60px;
+                background-color: #817f75;
+                display: inline-block;
+            }
+
+            #title h2 {
+                font-size: 40px;
+                background-color: #817f75;
+                display: inline-block;
+            }
+
+            svg text {
+                visibility: hidden;
             }
 
 
@@ -52,52 +62,21 @@
 
     <body>
         <div id="search-area"></div>
-        <!--<header>
-            <span id="logo"><a href="{% url 'home_index' %}">Wikipaths</a></span>
-        </header>-->
 
-        <!--<div id="search-div">
-            <form action="" method="get">
-                <input type="text" name="page" value="" placeholder="I.E. Javascript">
-                <input type="submit" value="Search" />
-            </form>
+        <!--<div id="title">
+            <h1>Wikipaths</h1><br>
+            <h2>Display knowledge like maps.</h2>
         </div>-->
 
-        <span style="position:absolute;bottom:10px;right:10px;color:rgba(0,0,0,0.5);z-index: 2000;font-size:14px;">
-            Wikipaths.org
-        </span>
-
-        <style>
-            .links line {
-                stroke: #999;
-                stroke-opacity: 1;
-            }
-
-            /*.nodes circle {
-                stroke: #fff;
-                stroke-width: 1.5px;
-            }*/
-
-            #fitscreen-button {
-                position: fixed;
-                top: 100;
-                left: 0;
-            }
-
-        </style>
-
-        <!--<svg id="svg-container" width="2000" height="2000"></svg>-->
-        <!--<script src="{% static 'wikipaths_diagrams\force_diagram\jquery-2.1.4.min.js' %}"></script>-->
         <script src="{% static 'wikipaths_diagrams\force_diagram\d3.v4.min.js' %}"></script>
         <script src="{% static 'wikipaths_diagrams\force_diagram\eventhandler.js' %}"></script>
-        <script src="{% static 'wikipaths_diagrams\force_diagram\force_diagram.js' %}"></script>
         <script src="{% static 'wikipaths_diagrams\force_diagram\nvgtt-container.js' %}"></script>
         <script src="{% static 'wikipaths_diagrams\blocks_diagram\blocks_diagram.js' %}"></script>
         <script src="{% static 'search_box.js' %}"></script>
 
         <script>
 
-            var searchBox = new SearchBox('{{ page }}');
+            var searchBox = new SearchBox();
 
             window.onload = function() {
 
@@ -108,21 +87,60 @@
                 });
 
 
-                // var diagram = new ForceDiagram("svg-container");
                 var diagram = new BlockDiagram("svg-container");
 
-                // diagram.on("load.end", function() {
-                //     console.log("ae");
-                //     esvg.fitScreen({top:60, bottom:10, left:10, right:10});
-                // });
+
+                var randNodes = [{}, {id:0, score:20}]; //The first element will be removed anyway
+
+                for(var i=1; i<20; i++) {
+                    var randScore = Math.floor((Math.random() * 20) + 1);
+                    randNodes.push({
+                        score:randScore,
+                        id: i
+                    })
+                }
                 
-                var rawEdges = JSON.parse('{{ page_links|safe }}');
+                diagram.load({ nodes:randNodes });
 
-                var linksScores = JSON.parse('{{links_score_dict_json|safe}}');
+                var svgAreaBBox = d3.select("#svg-container").node().getBBox();
 
-                var graphData = getGraphDataFromEdges(rawEdges, linksScores);
+                d3.select("#svg-container")
+                    .append("text")
+                    .style("visibility", "visible")
+                    .attr("text-anchor", "middle")
+                    .attr("y", function(){
+                        return svgAreaBBox.height * -0.1
+                    })
+                    .attr("fill", "#d3efbd")
+                    .attr("stroke", "#817f75")
+                    .attr("stroke-width", function(){
+                        return svgAreaBBox.height*0.002
+                    })
+                    .attr("font-size", function() {
+                        return svgAreaBBox.height * 0.1
+                    })
+                    .text("Wikipaths");
 
-                diagram.load(graphData);
+                d3.select("#svg-container")
+                    .append("text")
+                    .style("visibility", "visible")
+                    .attr("text-anchor", "middle")
+                    .attr("y", function(){
+                        return svgAreaBBox.height * 0.05
+                    })
+                    .attr("fill", "#d3efbd")
+                    .attr("stroke", "#817f75")
+                    .attr("stroke-width", function(){
+                        return svgAreaBBox.height*0.0005
+                    })
+                    .attr("font-size", function() {
+                        return svgAreaBBox.height * 0.05
+                    })
+                    .text("Display knowledge like maps.");
+
+                window.onresize = function() {
+                    esvg.fitScreen({top:70, bottom:10, left:10, right:10});
+                }
 
                 esvg.fitScreen({top:70, bottom:10, left:10, right:10});
             }

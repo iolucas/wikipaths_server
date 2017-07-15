@@ -3,7 +3,7 @@
 function SearchBox(initialText) {
     var self = this;
 
-    var searchDiv = d3.select(document.body)
+    var searchDiv = d3.select("#search-area")
         .append("div")
         // .style("background-color", "black")
         .style("position", "relative")
