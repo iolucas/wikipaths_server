@@ -4,7 +4,7 @@
 <html>
     <head>      
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">  
-        <title>learnmaps - Display knowledge as maps.</title>
+        <title>learnmaps - Explore knowledge as maps.</title>
         <style>
 
             html, body {
@@ -68,9 +68,10 @@
             <h2>Display knowledge like maps.</h2>
         </div>-->
 
-        <script src="{% static 'wikipaths_diagrams\force_diagram\d3.v4.min.js' %}"></script>
-        <script src="{% static 'wikipaths_diagrams\force_diagram\eventhandler.js' %}"></script>
-        <script src="{% static 'wikipaths_diagrams\force_diagram\nvgtt-container.js' %}"></script>
+        <script src="{% static 'wikipaths_diagrams\d3.v4.min.js' %}"></script>
+        <script src="{% static 'wikipaths_diagrams\eventhandler.js' %}"></script>
+        <script src="{% static 'wikipaths_diagrams\nvgtt-container.js' %}"></script>
+        <script src="{% static 'wikipaths_diagrams\blocks_diagram\grid.js' %}"></script>
         <script src="{% static 'wikipaths_diagrams\blocks_diagram\blocks_diagram.js' %}"></script>
         <script src="{% static 'search_box.js' %}"></script>
 
@@ -108,10 +109,10 @@
                     .style("visibility", "visible")
                     .attr("text-anchor", "middle")
                     .attr("y", function(){
-                        return svgAreaBBox.height * -0.1
+                        return svgAreaBBox.height * 0.39
                     })
                     .attr("x", function(){
-                        return svgAreaBBox.width * -0.07
+                        return svgAreaBBox.width * 0.44
                     })
                     .attr("fill", "#d3efbd")
                     .attr("stroke", "#615f55")
@@ -127,8 +128,11 @@
                     .append("text")
                     .style("visibility", "visible")
                     .attr("text-anchor", "middle")
-                    .attr("y", function(){
-                        return svgAreaBBox.height * -0.04
+                    .attr("y", function() {
+                        return svgAreaBBox.height * 0.45
+                    })
+                    .attr("x", function() {
+                        return svgAreaBBox.width * 0.5
                     })
                     .attr("fill", "#d3efbd")
                     .attr("stroke", "#615f55")
@@ -138,7 +142,7 @@
                     .attr("font-size", function() {
                         return svgAreaBBox.height * 0.05
                     })
-                    .text("Display knowledge as maps.");
+                    .text("Explore knowledge as maps.");
 
                 window.onresize = function() {
                     esvg.fitScreen({top:70, bottom:10, left:10, right:10});
@@ -182,7 +186,7 @@
             m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
             })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-            ga('create', 'UA-102033689-1', 'auto');
+            ga('create', 'UA-102577733-1', 'auto');
             ga('send', 'pageview');
 
         </script>

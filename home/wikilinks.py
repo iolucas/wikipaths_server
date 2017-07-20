@@ -33,6 +33,8 @@ def get_links_score_cache(url):
     for cacheUrl in JsonCacheUrl.objects.filter(url=urlObj.quoted):
         return cacheUrl.cache.json
 
+    # return json.dumps({})
+
     #Download article if not found
     try:
         art = wikipedia.get_article_by_href(urlObj)
@@ -52,7 +54,7 @@ def get_links_score_cache(url):
     #Create cacheUrl for this cache
     newCacheUrl = JsonCacheUrl.objects.create(url=urlObj.quoted, cache=cache)
 
-    return newCacheUrl.cache.json
+    return links_scores_json
 
 def normalize_counter(counter_dict, method="higher_count"):
     if method == "higher_count":

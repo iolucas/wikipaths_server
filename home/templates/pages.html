@@ -4,7 +4,7 @@
 <html>
     <head>      
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">  
-        <title>{{ page }} | learnmaps</title>
+        <!-- <title>{{ page }} | learnmaps</title> -->
         <style>
 
             html, body {
@@ -43,6 +43,10 @@
                 /*left: 5px;*/
                 position: relative;
                 z-index: 1000;
+            }
+
+            .hidden-group {
+                visibility: collapse;
             }
 
 
@@ -84,20 +88,39 @@
                 left: 0;
             }
 
+            .block-over {
+                fill: blue;
+            }
+
         </style>
 
         <!--<svg id="svg-container" width="2000" height="2000"></svg>-->
         <!--<script src="{% static 'wikipaths_diagrams\force_diagram\jquery-2.1.4.min.js' %}"></script>-->
-        <script src="{% static 'wikipaths_diagrams\force_diagram\d3.v4.min.js' %}"></script>
-        <script src="{% static 'wikipaths_diagrams\force_diagram\eventhandler.js' %}"></script>
+        <script src="{% static 'wikipaths_diagrams\d3.v4.min.js' %}"></script>
+        <script src="{% static 'wikipaths_diagrams\eventhandler.js' %}"></script>
         <!--<script src="{% static 'wikipaths_diagrams\force_diagram\force_diagram.js' %}"></script>-->
-        <script src="{% static 'wikipaths_diagrams\force_diagram\nvgtt-container.js' %}"></script>
+        <script src="{% static 'wikipaths_diagrams\nvgtt-container.js' %}"></script>
+        <script src="{% static 'wikipaths_diagrams\blocks_diagram\grid.js' %}"></script>
         <script src="{% static 'wikipaths_diagrams\blocks_diagram\blocks_diagram.js' %}"></script>
         <script src="{% static 'search_box.js' %}"></script>
 
         <script>
 
-            var searchBox = new SearchBox('{{ page }}');
+            function getPath() {
+                var path = [];
+                window.location.pathname.split("/").forEach(function(d) {
+                    if(d) path.push(d);
+                });
+                return path;
+            }
+
+            function getArticle() {
+                return decodeURIComponent(getPath()[1]);
+            }
+
+            document.title = getArticle() +  "| learnmaps";
+
+            var searchBox = new SearchBox(getArticle());
 
             window.onload = function() {
 
@@ -110,8 +133,110 @@
 
                 var diagram = new BlockDiagram("svg-container");
 
-                var linksScores = JSON.parse('{{links_score_dict_json|safe}}');
+                d3.json("/mapelem/" + getArticle(), function(data) {
 
+                    // var linksScores = JSON.parse('{{links_score_dict_json|safe}}');
+                    var linksScores = data;
+
+                    var nodesScores = []
+                    for(var node in linksScores) {
+                        nodesScores.push({
+                            id: node, score:linksScores[node] 
+                        })
+                    }
+
+                    if(nodesScores.length == 0) {
+                        alert("Page not found!");
+                        return;
+                    }
+
+                    diagram.load({nodes: nodesScores});
+
+                    esvg.fitScreen({top:70, bottom:10, left:10, right:10});
+
+                    //Grid to detect over positions
+                    var hoverGrid = new Grid();
+                    //Fill grid with the data positions
+                    for(var i=0; i < nodesScores.length; i++) {
+                        var node = nodesScores[i];
+                        // console.log(node);
+                        hoverGrid.fillSpace(node.x, node.y, node.width, node.height, node);
+                    }
+
+                    var selectedId = null;
+
+                    esvg.on("move-zoom", function(x, y, k) {
+                        // return;
+                        var correctX = parseInt(x/50);
+                        var correctY = parseInt(y/50);
+                        var hoverBlock = hoverGrid.getValue(correctX, correctY);
+
+                        //If no block selected return
+                        if(!hoverBlock) {
+                            d3.select(".subcont-block").remove();
+                            
+                            d3.selectAll(".block-hover")
+                                .attr("fill", "#817f75")
+                                .classed("block-hover", false);
+                                
+                            //Remove all hidden-groups
+                            d3.selectAll(".hidden-group")
+                                .classed("hidden-group", false);
+                            return;
+                        }
+                            
+
+                        // if(selectedId == hoverBlock.id)
+                        //     return;
+
+                        selectedId = hoverBlock.id;
+
+                        //Calculate the portion in the screen 
+                        var hoverBlockBBox = hoverBlock.dom.getBBox();
+                        var screenPortion = Math.max(
+                            hoverBlockBBox.height*k / window.innerHeight,
+                            hoverBlockBBox.width*k / window.innerWidth,
+                        )
+
+                        //Only proceed if portion is more than 0.6
+                        if(screenPortion < 0.4) {
+                            d3.select(".subcont-block").remove();
+                            
+                            d3.selectAll(".block-hover")
+                                .attr("fill", "#817f75")
+                                .classed("block-hover", false);
+
+                            //Remove all hidden-groups
+                            d3.selectAll(".hidden-group")
+                                .classed("hidden-group", false);
+                            return;
+                        }
+                            
+
+                        // d3.select(hoverBlock.dom).classed("block-hover", true);
+                        //Remove any current selection
+                        d3.selectAll(".block-hover")
+                            .attr("fill", "#817f75")
+                            .classed("block-hover", false);
+
+                        //Select current hover block if any
+                        d3.select(hoverBlock.dom)
+                            .select("rect")
+                            .classed("block-hover", true)
+                            .attr("fill", "#888");
+
+                        loadSubcontent(hoverBlock.id, hoverBlock.dom, hoverBlock.quad);
+
+                        // d3.json("/mapelem/" + hoverBlock.id + "/", function(data) {
+                        //     console.log(data);
+                        // });
+                    });
+                });
+            }
+
+
+            function renderSubcontent(linksScores, nodeGroup, quad) {
+                
                 var nodesScores = []
                 for(var node in linksScores) {
                     nodesScores.push({
@@ -119,10 +244,120 @@
                     })
                 }
 
-                diagram.load({nodes: nodesScores});
+                var sortedNodes = nodesScores.sort(function(a, b) {
+                    return b.score - a.score;
+                });
 
-                esvg.fitScreen({top:70, bottom:10, left:10, right:10});
+                var lowerScore = 1;
+                try{
+                    lowerScore = sortedNodes[sortedNodes.length-1].score;
+                } catch(e) { }
+
+                //Load data into a quarter circle grid
+                var quarterGrid = new QuarterCircleGrid(quad);
+
+                for(var i in sortedNodes) {
+                    var node = sortedNodes[i];
+                    node.width = parseInt(node.score/lowerScore);
+                    node.height = parseInt(node.score/lowerScore);
+                    quarterGrid.addSquare(node);
+                }
+
+                var minX = 0;
+                var minY = 0;
+                for(var i=0; i < sortedNodes.length; i++) {
+                    minX = Math.min(minX, sortedNodes[i].x);
+                    minY = Math.min(minY, sortedNodes[i].y);
+                }
+                //Put origin @ 0,0
+                for(var i=0; i < sortedNodes.length; i++) {
+                    sortedNodes[i].x -= minX;
+                    sortedNodes[i].y -= minY;
+                }
+
+                var blockMargin = 2;
+                var blockScale = 50;
+                var textMargin = 10;
+
+                //Destroy every subcontblock
+                d3.select(".subcont-block").remove();
+
+                //Remove all hidden-groups
+                d3.selectAll(".hidden-group")
+                    .classed("hidden-group", false);
+                    
+
+                var block = d3.select(nodeGroup)
+                    .selectAll("*")
+                    .classed("hidden-group", true);
+                
+                var nodeGroupBBoxHeight = nodeGroup.getBBox().height;
+
+                var subcontBlock = d3.select(nodeGroup).append("g")
+                    .classed("subcont-block", true)
+                    .selectAll(".square-blocks")
+                    .data(sortedNodes)
+                    .enter()
+                    .append("g")
+                    .attr("transform", function(d) {
+                        // d.dom = this;
+                        return "translate(" + d.x*blockScale + " " + d.y*blockScale + ")";
+                    })
+                    .attr("class", "square-blocks");
+
+                subcontBlock.append("rect")
+                    .attr("fill", "#888")
+                    .attr("height", function(d){
+                        d.blockHeight = d.height*blockScale - blockMargin;
+                        return d.blockHeight;
+                    })
+                    .attr("width",  function(d){
+                        d.blockWidth = d.width*blockScale - blockMargin;
+                        return d.blockWidth;
+                    });
+
+                var textBlock = subcontBlock.append("text")
+                    .text(function(d) {
+                        var blockTextValue = decodeURIComponent(d.id);
+                        blockTextValue = blockTextValue.replaceAll("_", " ");
+                        return blockTextValue; 
+                    });
+                    // .attr("font-size", 5); 
+
+                    //Get ggbox for each text to adjust its size
+                    textBlock.each(function(d) {
+                        //Ratio between height/font-size for upper case include is =~ 1.3
+                        // 1/1.3 =~ 0.75
+                        var textBBox = this.getBBox();
+                        d.fontSize = 0.75 * (textBBox.height/(textBBox.width + textMargin)) * (d.blockWidth)
+                    });
+
+                textBlock.attr("text-anchor", "middle")
+                    .attr("fill", "#d3efbd")
+                    .attr("font-size", function(d){ return d.fontSize; })
+                    .attr("x", function(d){
+                        return d.blockWidth/2;
+                    })
+                    .attr("y", function(d){
+                        return d.blockHeight/2;
+                    });
+
+                //Get and set scale
+                var subcontBlockBBox = d3.select(".subcont-block").node().getBBox();
+                // console.log(subcontBlockBBox);
+                var subcontScale = nodeGroupBBoxHeight / Math.max(subcontBlockBBox.height, subcontBlockBBox.width);
+                // console.log(subcontScale);
+                d3.select(".subcont-block").attr("transform", "scale(" + subcontScale + ")");
             }
+
+            function loadSubcontent(subcontent, nodeGroup, quad) {
+                d3.json("/mapelem/" + subcontent + "/", function(data) {
+                        renderSubcontent(data, nodeGroup, quad);
+                });
+            }
+
+
+            
 
         </script>
 
@@ -132,7 +367,7 @@
             m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
             })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-            ga('create', 'UA-102033689-1', 'auto');
+            ga('create', 'UA-102577733-1', 'auto');
             ga('send', 'pageview');
 
         </script>

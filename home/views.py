@@ -26,6 +26,11 @@ def display_scores_debug(request, url):
 
     return HttpResponse(scores_json)
 
+def map_elements(request, article):
+    nodes_score_json = wikilinks.get_links_score_cache(article)
+    if nodes_score_json == None:
+        return HttpResponse("{}")
+    return HttpResponse(nodes_score_json)
 
 def display_map(request, article):
     # try:
@@ -42,13 +47,13 @@ def display_map(request, article):
     #     except PageDoesNotExists:
     #         raise Http404
 
-    nodes_score_json = wikilinks.get_links_score_cache(article)
-    if nodes_score_json == None:
-        raise Http404
+    # nodes_score_json = wikilinks.get_links_score_cache(article)
+    # if nodes_score_json == None:
+    #     raise Http404
 
     return render(request, "pages.html", {
-        'page': article,
-        'links_score_dict_json': nodes_score_json
+        # 'page': article,
+        # 'links_score_dict_json': nodes_score_json
     })
 
 def home_index(request):
