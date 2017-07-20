@@ -98,142 +98,174 @@
         <!--<script src="{% static 'wikipaths_diagrams\force_diagram\jquery-2.1.4.min.js' %}"></script>-->
         <script src="{% static 'wikipaths_diagrams\d3.v4.min.js' %}"></script>
         <script src="{% static 'wikipaths_diagrams\eventhandler.js' %}"></script>
+        <script src="{% static 'utils.js' %}"></script>
         <!--<script src="{% static 'wikipaths_diagrams\force_diagram\force_diagram.js' %}"></script>-->
-        <script src="{% static 'wikipaths_diagrams\nvgtt-container.js' %}"></script>
+        <!-- <script src="{% static 'wikipaths_diagrams\nvgtt-container.js' %}"></script> -->
+        <script src="{% static 'wikipaths_diagrams\elasticsvg.js' %}"></script>
         <script src="{% static 'wikipaths_diagrams\blocks_diagram\grid.js' %}"></script>
         <script src="{% static 'wikipaths_diagrams\blocks_diagram\blocks_diagram.js' %}"></script>
         <script src="{% static 'search_box.js' %}"></script>
+        <script src="{% static 'loadscreen.js' %}"></script>
 
         <script>
 
-            function getPath() {
-                var path = [];
-                window.location.pathname.split("/").forEach(function(d) {
-                    if(d) path.push(d);
+            var pageCache = {}
+
+            window.onhashchange = function() {
+                loadFromCacheOrDownload(currentPage());
+            }
+
+            // function getArticle() {
+            //     return decodeURIComponent(getPath()[1]);
+            // }
+
+            function currentPage() {
+                return getHashPath().getLastItem();
+            }
+
+            function loadFromCacheOrDownload(page) {
+
+                document.title = page +  " | learnmaps";
+                
+                if(pageCache[page]) {
+                    loadPageContent(pageCache[page]);
+                    return;
+                }
+
+                LoadScreen.show();
+                d3.json("/mapelem/" + page, function(data) {
+                    LoadScreen.hide();
+                    pageCache[page] = data;
+                    loadPageContent(data);
                 });
-                return path;
             }
 
-            function getArticle() {
-                return decodeURIComponent(getPath()[1]);
+            function loadPageContent(data) {
+                var linksScores = data;
+
+                var nodesScores = []
+                for(var node in linksScores) {
+                    nodesScores.push({
+                        id: node, score:linksScores[node] 
+                    })
+                }
+
+                if(nodesScores.length == 0) {
+                    alert("Page not found!");
+                    return;
+                }
+                
+                diagram.load({nodes: nodesScores});
+                esvg.fitScreen({top:70, bottom:10, left:10, right:10});
             }
 
-            document.title = getArticle() +  " | learnmaps";
+            
 
-            var searchBox = new SearchBox(getArticle());
+            var searchBox = new SearchBox(currentPage());
+            var esvg = new ElasticSvg("svg-container", document.body);
+            var diagram = new BlockDiagram("svg-container");
 
             var blocksCache = {}
 
             window.onload = function() {
 
-                var esvg = new ElasticSvg("svg-container", document.body);
-
                 esvg.on("dblclick", function() {
                     esvg.fitScreen({top:70, bottom:10, left:10, right:10});
                 });
 
+                loadFromCacheOrDownload(currentPage());
 
-                var diagram = new BlockDiagram("svg-container");
+                return;
 
-                d3.json("/mapelem/" + getArticle(), function(data) {
-                    blocksCache[getArticle()] = data;
 
-                    // var linksScores = JSON.parse('{{links_score_dict_json|safe}}');
-                    var linksScores = data;
+                LoadScreen.show();
+                var articleAddr = currentPage();
+                d3.json("/mapelem/" + articleAddr, function(data) {
+                    LoadScreen.hide();
 
-                    var nodesScores = []
-                    for(var node in linksScores) {
-                        nodesScores.push({
-                            id: node, score:linksScores[node] 
-                        })
-                    }
+                    blocksCache[currentPage()] = data;
 
-                    if(nodesScores.length == 0) {
-                        alert("Page not found!");
-                        return;
-                    }
+                    loadPageContent(data);
 
-                    diagram.load({nodes: nodesScores});
+                    // return;
 
-                    esvg.fitScreen({top:70, bottom:10, left:10, right:10});
+                    // //Grid to detect over positions
+                    // var hoverGrid = new Grid();
+                    // //Fill grid with the data positions
+                    // for(var i=0; i < nodesScores.length; i++) {
+                    //     var node = nodesScores[i];
+                    //     // console.log(node);
+                    //     hoverGrid.fillSpace(node.x, node.y, node.width, node.height, node);
+                    // }
 
-                    //Grid to detect over positions
-                    var hoverGrid = new Grid();
-                    //Fill grid with the data positions
-                    for(var i=0; i < nodesScores.length; i++) {
-                        var node = nodesScores[i];
-                        // console.log(node);
-                        hoverGrid.fillSpace(node.x, node.y, node.width, node.height, node);
-                    }
+                    // var selectedId = null;
 
-                    var selectedId = null;
+                    // esvg.on("move-zoom", function(x, y, k) {
+                        
+                    //     var correctX = parseInt(x/50);
+                    //     var correctY = parseInt(y/50);
+                    //     var hoverBlock = hoverGrid.getValue(correctX, correctY);
 
-                    esvg.on("move-zoom", function(x, y, k) {
-                        // return;
-                        var correctX = parseInt(x/50);
-                        var correctY = parseInt(y/50);
-                        var hoverBlock = hoverGrid.getValue(correctX, correctY);
-
-                        //If no block selected return
-                        if(!hoverBlock) {
-                            d3.select(".subcont-block").remove();
+                    //     //If no block selected return
+                    //     if(!hoverBlock) {
+                    //         d3.select(".subcont-block").remove();
                             
-                            d3.selectAll(".block-hover")
-                                .attr("fill", "#817f75")
-                                .classed("block-hover", false);
+                    //         d3.selectAll(".block-hover")
+                    //             .attr("fill", "#817f75")
+                    //             .classed("block-hover", false);
                                 
-                            //Remove all hidden-groups
-                            d3.selectAll(".hidden-group")
-                                .classed("hidden-group", false);
-                            return;
-                        }
+                    //         //Remove all hidden-groups
+                    //         d3.selectAll(".hidden-group")
+                    //             .classed("hidden-group", false);
+                    //         return;
+                    //     }
                             
 
                         // if(selectedId == hoverBlock.id)
                         //     return;
 
-                        selectedId = hoverBlock.id;
+                    //     selectedId = hoverBlock.id;
 
-                        //Calculate the portion in the screen 
-                        var hoverBlockBBox = hoverBlock.dom.getBBox();
-                        var screenPortion = Math.max(
-                            hoverBlockBBox.height*k / window.innerHeight,
-                            hoverBlockBBox.width*k / window.innerWidth,
-                        )
+                    //     //Calculate the portion in the screen 
+                    //     var hoverBlockBBox = hoverBlock.dom.getBBox();
+                    //     var screenPortion = Math.max(
+                    //         hoverBlockBBox.height*k / window.innerHeight,
+                    //         hoverBlockBBox.width*k / window.innerWidth,
+                    //     )
 
-                        //Only proceed if portion is more than 0.6
-                        if(screenPortion < 0.6) {
-                            d3.select(".subcont-block").remove();
+                    //     //Only proceed if portion is more than 0.6
+                    //     if(screenPortion < 0.6) {
+                    //         d3.select(".subcont-block").remove();
                             
-                            d3.selectAll(".block-hover")
-                                .attr("fill", "#817f75")
-                                .classed("block-hover", false);
+                    //         d3.selectAll(".block-hover")
+                    //             .attr("fill", "#817f75")
+                    //             .classed("block-hover", false);
 
-                            //Remove all hidden-groups
-                            d3.selectAll(".hidden-group")
-                                .classed("hidden-group", false);
-                            return;
-                        }
+                    //         //Remove all hidden-groups
+                    //         d3.selectAll(".hidden-group")
+                    //             .classed("hidden-group", false);
+                    //         return;
+                    //     }
                             
 
-                        // d3.select(hoverBlock.dom).classed("block-hover", true);
-                        //Remove any current selection
-                        d3.selectAll(".block-hover")
-                            .attr("fill", "#817f75")
-                            .classed("block-hover", false);
+                    //     // d3.select(hoverBlock.dom).classed("block-hover", true);
+                    //     //Remove any current selection
+                    //     d3.selectAll(".block-hover")
+                    //         .attr("fill", "#817f75")
+                    //         .classed("block-hover", false);
 
-                        //Select current hover block if any
-                        d3.select(hoverBlock.dom)
-                            .select("rect")
-                            .classed("block-hover", true)
-                            .attr("fill", "#888");
+                    //     //Select current hover block if any
+                    //     d3.select(hoverBlock.dom)
+                    //         .select("rect")
+                    //         .classed("block-hover", true)
+                    //         .attr("fill", "#888");
 
-                        loadSubcontent(hoverBlock.id, hoverBlock.dom, hoverBlock.quad);
+                    //     loadSubcontent(hoverBlock.id, hoverBlock.dom, hoverBlock.quad);
 
-                        // d3.json("/mapelem/" + hoverBlock.id + "/", function(data) {
-                        //     console.log(data);
-                        // });
-                    });
+                    //     // d3.json("/mapelem/" + hoverBlock.id + "/", function(data) {
+                    //     //     console.log(data);
+                    //     // });
+                    // });
                 });
             }
 

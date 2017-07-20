@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 from django.http import HttpResponse, Http404
 
@@ -32,7 +32,12 @@ def map_elements(request, article):
         return HttpResponse("{}")
     return HttpResponse(nodes_score_json)
 
+def display_hash_map(request):
+    return render(request, "pages.html")
+
 def display_map(request, article):
+    return redirect("/map#" + article)
+    # return HttpResponse("lucas")
     # try:
     #     nodes_score_json = JsonCache.objects.get(url=article).json
 
@@ -51,10 +56,10 @@ def display_map(request, article):
     # if nodes_score_json == None:
     #     raise Http404
 
-    return render(request, "pages.html", {
-        # 'page': article,
-        # 'links_score_dict_json': nodes_score_json
-    })
+    # return render(request, "pages.html", {
+    #     # 'page': article,
+    #     # 'links_score_dict_json': nodes_score_json
+    # })
 
 def home_index(request):
 
