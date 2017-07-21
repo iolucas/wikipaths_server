@@ -50,12 +50,40 @@
             }
 
 
+            #path-div {
+                background-color: #ddd;
+                position: relative;
+                z-index: 1000;
+                width: 100%;
+            }
+            #path-area {
+                line-height: 40px;
+                height: 40px;
+                max-width: 100%; 
+                display: inline-block;
+                /* overflow:visible; */
+                /* overflow-wrap: break-word;  */
+                white-space: nowrap; 
+                /* overflow-x: hidden; */
+            }
+
+            #path-text {
+                font-size: 20px;
+                margin: 0px 20px 0px 20px;  
+                float:right;
+            }
 
         </style>
     </head>
 
     <body>
         <div id="search-area"></div>
+
+        <div id="path-div">
+            <div id="path-area">
+                <div id="path-text"></div>
+            </div>
+        </div>
         <!--<header>
             <span id="logo"><a href="{% url 'home_index' %}">Wikipaths</a></span>
         </header>-->
@@ -71,16 +99,11 @@
             learnmaps.net
         </span>
 
-        <style>
+        <!-- <style>
             .links line {
                 stroke: #999;
                 stroke-opacity: 1;
             }
-
-            /*.nodes circle {
-                stroke: #fff;
-                stroke-width: 1.5px;
-            }*/
 
             #fitscreen-button {
                 position: fixed;
@@ -92,7 +115,7 @@
                 fill: blue;
             }
 
-        </style>
+        </style> -->
 
         <!--<svg id="svg-container" width="2000" height="2000"></svg>-->
         <!--<script src="{% static 'wikipaths_diagrams\force_diagram\jquery-2.1.4.min.js' %}"></script>-->
@@ -119,11 +142,41 @@
             //     return decodeURIComponent(getPath()[1]);
             // }
 
+            function loadPathDiv() {
+                d3.select("#path-text").selectAll("*").remove()
+
+                var hashPath = getHashPath();
+
+                var donePaths = [];
+                var pathsObjs = [];
+                for(var i=0; i < hashPath.length; i++) {
+                    var path = hashPath[i];
+                    donePaths.push(path);
+                    pathsObjs.push({
+                        href: "#" + donePaths.join("/"),
+                        text: decodeURIComponent(path)
+                    });
+                }
+
+                for(var i=0; i < pathsObjs.length; i++) {
+                    d3.select("#path-text")
+                        .append("span")
+                        .append("a")
+                        .attr("href", pathsObjs[i].href)
+                        .text(pathsObjs[i].text);
+                    
+                    d3.select("#path-text")
+                        .append("span")
+                        .text(" > ");
+                }
+            }
+
             function currentPage() {
                 return getHashPath().getLastItem();
             }
 
-            function loadFromCacheOrDownload(page) {
+            function loadFromCacheOrDownload(page, failIfNotFound) {
+                loadPathDiv();
 
                 document.title = page +  " | learnmaps";
                 
@@ -135,8 +188,21 @@
                 LoadScreen.show();
                 d3.json("/mapelem/" + page, function(data) {
                     LoadScreen.hide();
-                    pageCache[page] = data;
-                    loadPageContent(data);
+                    
+                    var dataFound = loadPageContent(data);
+                    
+                    if(dataFound) {
+                        pageCache[page] = data;
+                        return;
+                    }
+
+                    //Use this due to a server bug that sometimes do not send correct page data,
+                    //but after reloads, it does.
+                    if(failIfNotFound) {
+                        alert("Page not found!");
+                    } else { //Try one more time, but fail next time
+                        loadFromCacheOrDownload(page, true);
+                    } 
                 });
             }
 
@@ -150,18 +216,22 @@
                     })
                 }
 
-                if(nodesScores.length == 0) {
-                    alert("Page not found!");
-                    return;
-                }
-                
+                //Page not found verification
+                if(nodesScores.length == 0)
+                    return false;
+
+                //Chrome (and maybe others) take into account the current scale to calculate the BBox
+                //So for correct measures, we need to scale things back to one
+                esvg.scale(1);
+
                 diagram.load({nodes: nodesScores});
-                esvg.fitScreen({top:70, bottom:10, left:10, right:10});
+                esvg.fitScreen({top:110, bottom:10, left:10, right:10});
+                return true;
             }
 
             
 
-            var searchBox = new SearchBox(currentPage());
+            var searchBox = new SearchBox();
             var esvg = new ElasticSvg("svg-container", document.body);
             var diagram = new BlockDiagram("svg-container");
 
@@ -170,22 +240,28 @@
             window.onload = function() {
 
                 esvg.on("dblclick", function() {
-                    esvg.fitScreen({top:70, bottom:10, left:10, right:10});
+                    esvg.fitScreen({top:110, bottom:10, left:10, right:10});
                 });
 
                 loadFromCacheOrDownload(currentPage());
 
-                return;
+
+                
 
 
-                LoadScreen.show();
-                var articleAddr = currentPage();
-                d3.json("/mapelem/" + articleAddr, function(data) {
-                    LoadScreen.hide();
 
-                    blocksCache[currentPage()] = data;
 
-                    loadPageContent(data);
+                // return;
+
+
+                // LoadScreen.show();
+                // var articleAddr = currentPage();
+                // d3.json("/mapelem/" + articleAddr, function(data) {
+                //     LoadScreen.hide();
+
+                //     blocksCache[currentPage()] = data;
+
+                //     loadPageContent(data);
 
                     // return;
 
@@ -266,7 +342,7 @@
                     //     //     console.log(data);
                     //     // });
                     // });
-                });
+                // });
             }
 
 

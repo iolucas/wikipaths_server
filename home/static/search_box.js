@@ -13,7 +13,7 @@ function SearchBox(initialText) {
         .append("table")
         .style("width", "100%")
         .style("background-color", "#fff")
-        .style("margin-bottom", "10px")
+        // .style("margin-bottom", "10px")
         // .style("height", "80px")
         .append("tr")
         // .style("border", "2px solid #000")
@@ -158,6 +158,11 @@ function SearchBox(initialText) {
             searchDiv.selectAll(".search-result")
                 .remove()
             
+            // searchDiv.append("div")
+            //     .attr("class", "search-result")
+            //     .style("background-color", "#ddd")
+            //     .style("height", "10px");
+
             var searchRes = searchDiv.selectAll(".search-result")
                 .data(data)
                 .enter()
@@ -171,7 +176,7 @@ function SearchBox(initialText) {
                 .style("padding", "5px 5px 5px 10px")
                 // .style("line-height", "30px")
                 .style("border-top", "1px solid #777")
-                .style("background-color", "#fff");
+                .style("background-color", "#f1f1f1");
 
             searchRes.append("span")
                 // .style("margin", "0")
